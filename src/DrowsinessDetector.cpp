@@ -7,7 +7,7 @@
 //============================================================================
 
 #include <iostream>
-#include "cameraHandler.hpp"
+#include "FaceFeatures.hpp"
 #include "helper.hpp"
 #include<fstream>
 #define TEST
@@ -18,20 +18,31 @@
 #define NOEYESFRAMES 10
 void raiseAlarm();
 bool checkEyes(vector<Rect> eyes);
+void drawFaceRect(EyeDetector, Mat, Rect);
+void drawEyesRect(EyeDetector detector, Mat frame, Rect facesI, Rect eyesJ);
 int main() {
+	cout << "Checkpoint 9" << endl;
 
 	CameraHandler handle;
 	EyeDetector detector;
 	Mat eyeROI;
+	cout << "Checkpoint 8" << endl;
+
 	detector.setFaceCascade("haarcascade_frontalface_alt.xml");
 	detector.setEyeCascade("haarcascade_eye_tree_eyeglasses.xml");
 	handle.initCamera(-1);
+	cout << "Checkpoint 7" << endl;
+
 	cvNamedWindow("test");
 	int numBlack = 0;
 	int flag = 0;
 	int count = 0;
 	int noEyesCount;
+	cout << "Checkpoint 6" << endl;
+
 	while (true) {
+		cout << "Checkpoint 5" << endl;
+
 		Mat frame = handle.fetchFrame();
 		Mat frame_gray;
 		int faceIndx = 0;
@@ -40,16 +51,17 @@ int main() {
 
 		vector<Rect> faces = detector.detectFaces(frame_gray);
 		vector<Rect> eyes;
+		cout << "Checkpoint 4" << endl;
+
 		if (faces.size() > 0) {
 			faceIndx = Helper::getMax(faces);
+			cout << "Checkpoint 3.5" << endl;
 
-			detector.drawRect(frame,
-					Point(faces[faceIndx].x, faces[faceIndx].y),
-					Point(faces[faceIndx].x + faces[faceIndx].width,
-							faces[faceIndx].y + faces[faceIndx].height),
-					Scalar(255, 0, 0));
+			drawFaceRect(detector, frame, faces[faceIndx]);
+			cout << "Checkpoint 3" << endl;
 
 			eyes = detector.detectEyes(faces[faceIndx], frame_gray);
+			cout << "Checkpoint 2" << endl;
 
 #ifdef debug
 			cout << "size of eyes" << eyes.size() << endl;
@@ -63,17 +75,14 @@ int main() {
 			} else {
 				noEyesCount = 0;
 			}
+			cout << "Checkpoint 1" << endl;
 			for (uint j = 0; j < eyes.size(); j++) {
 				if (j == 0 || abs(eyes[j].x - eyes[0].x) >= 100) {
-					detector.drawRect(frame,
-							Point(faces[faceIndx].x + eyes[j].x,
-									faces[faceIndx].y + eyes[j].y),
-							Point(faces[faceIndx].x + eyes[j].x + eyes[j].width,
-									faces[faceIndx].y + eyes[j].y
-											+ eyes[j].height),
-							Scalar(0, 255, 0));
+					drawEyesRect(detector, frame, faces[faceIndx], eyes[j]);
+
 					if (flag == 1 && eyes.size() > 0) {
-						numBlack += Helper::getBlackPixels(frame_gray(eyes[j]));
+						cout << "Entered in numblack" << endl;
+						//numBlack += Helper::getBlackPixels(frame_gray(eyes[j]));
 					}
 #ifdef debug
 					cout << "x coordinate" << eyes[j].x << endl;
@@ -85,7 +94,7 @@ int main() {
 
 			if (flag == 1) {
 				count++;
-				cout << "black pixels" << numBlack / count << endl;
+				//cout << "black pixels" << numBlack / count << endl;
 			}
 
 #ifndef TEST
@@ -116,6 +125,7 @@ int main() {
 			numBlack = 0;
 		}
 		if ((char) c == 'r') {
+			cout<<"entered r"<<endl;
 			flag = 1;
 		}
 		if ((char) c == 's') {
@@ -128,20 +138,4 @@ int main() {
 }
 
 void raiseAlarm() {
-}
-
-bool checkEyes(vector<Rect> eyes) {
-
-	if (eyes.size() == 0)
-		return false;
-	if (eyes.size() == 1)
-		return false;
-	if (eyes.size() == 2) {
-		if (abs(eyes[0].x - eyes[1].x) >= 100)
-			return true;
-		else
-			return false;
-	}
-	return true;
-
 }
